@@ -3,6 +3,7 @@
 Run: python3 tests/browser_test.py
 Requires Python playwright and a Chromium executable (CHROMIUM_PATH may override).
 The test starts its own loopback HTTP server and uses temporary browser contexts.
+ARCHIVE_SITE_DIR selects a staged Pages artifact instead of the source directory.
 """
 from __future__ import annotations
 import functools
@@ -18,6 +19,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
+SITE_ROOT = Path(os.environ.get('ARCHIVE_SITE_DIR', str(ROOT))).resolve()
 ARTIFACTS = ROOT / 'tests' / 'artifacts'
 
 
@@ -49,7 +51,9 @@ class BrowserAcceptance(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         ARTIFACTS.mkdir(parents=True, exist_ok=True)
-        cls.server = ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(QuietHandler, directory=str(ROOT)))
+        if not (SITE_ROOT / 'index.html').is_file():
+            raise RuntimeError(f'Site entry point is missing: {SITE_ROOT / "index.html"}')
+        cls.server = ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(QuietHandler, directory=str(SITE_ROOT)))
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
         cls.url = f'http://127.0.0.1:{cls.server.server_port}'
@@ -459,7 +463,8 @@ if __name__ == '__main__':
     result = unittest.TextTestRunner(verbosity=2, resultclass=RecordingResult).run(suite)
     report = dict(
         executed_at_utc=datetime.now(timezone.utc).isoformat(),
-        runner='Python unittest + Playwright, system Chromium headless',
+        runner='Python unittest + Playwright, Chromium headless',
+        tested_site_dir=str(SITE_ROOT),
         tests_run=result.testsRun,
         passed=sum(v == 'passed' for v in result.checks.values()),
         failures=len(result.failures), errors=len(result.errors), skipped=len(result.skipped),

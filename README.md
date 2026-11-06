@@ -72,4 +72,6 @@ python3 -c "from playwright.sync_api import sync_playwright; p=sync_playwright()
 
 자세한 데이터 구조는 [데이터 설계](docs/data-model.md), 초기 버전 확인 결과와 배포 범위는 [기준본 및 운영 확인](docs/starter-review.md), Windows에서의 최종 사용 확인 항목은 [수동 검수](docs/manual-checks.md)를 참고하세요.
 
-현재 구현은 정적 호스팅에 올릴 수 있는 소스입니다. GitHub Pages API 조회가 `Forbidden`으로 거부되어 기존 Pages 설정과 실제 배포 상태를 확인하지 못했습니다. 자동 배포 설정은 추가하지 않았으며, 배포 완료를 의미하지 않습니다. 다른 프로젝트 소스·데이터와 자동 연동하지 않습니다.
+GitHub Pages 배포는 같은 [CI 워크플로](.github/workflows/ci.yml)에 포함되어 있습니다. 모든 브랜치와 PR에서 테스트하며, `main`의 push·수동 실행에서는 테스트를 통과한 정적 파일만 Pages로 배포합니다. 브라우저 검증도 실제 배포할 `_site` 폴더를 대상으로 실행합니다. 다른 프로젝트 소스·데이터와 자동 연동하지 않습니다.
+
+현재 클라우드 프록시가 GitHub API와 Pages 주소를 차단하여 실행 `42200562155`의 원본 로그, 새 원격 CI 결과, PR·병합·공개 배포를 확인하지 못했습니다. 배포 완료 상태가 아닙니다. 수정 내용과 적용 경로는 [Pages 배포 안내](docs/deployment.md)를 참고하세요.

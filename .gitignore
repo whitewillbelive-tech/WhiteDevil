@@ -5,3 +5,4 @@ venv/
 tests/artifacts/
 .DS_Store
 Thumbs.db
+_site/
