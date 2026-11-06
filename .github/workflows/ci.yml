@@ -1,0 +1,39 @@
+name: Archive checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Data model and recovery checks
+        run: node --test --test-isolation=none tests/data.test.js
+      - name: Install browser test tools
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+      - name: Chromium acceptance checks
+        run: |
+          export CHROMIUM_PATH="$(python -c "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()")"
+          python tests/browser_test.py
+      - name: Retain browser artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-artifacts
+          path: tests/artifacts/
+          if-no-files-found: ignore
